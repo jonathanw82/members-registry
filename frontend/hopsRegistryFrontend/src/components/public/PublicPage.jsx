@@ -198,9 +198,6 @@ export default function PublicPage() {
             <div className="card" style={{ textAlign: "center", padding: "3rem" }}>
               <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🌿</div>
               <p style={{ color: "var(--fog)", marginBottom: "1rem" }}>No public yield data available yet.</p>
-              <p style={{ color: "var(--fog)", fontSize: "0.83rem" }}>
-                Log in as an admin to see full data, or register as a grower to add your own.
-              </p>
             </div>
           ) : (
             <>

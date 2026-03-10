@@ -3,20 +3,31 @@ from django.contrib.auth.models import User
 
 
 def generate_membership_number():
-    """Generate a sequential 4-digit membership number starting from 0001."""
-    from members.models import MemberProfile
-    try:
-        last = (
-            MemberProfile.objects
-            .filter(membership_number__regex=r'^\d{4}$')
-            .order_by('-membership_number')
-            .values_list('membership_number', flat=True)
-            .first()
-        )
-        next_num = int(last) + 1 if last else 1
-    except Exception:
-        next_num = 1
-    return f"BHC-{str(next_num).zfill(4)}"
+    """Generate a unique sequential membership number starting from 0001."""
+    from django.db import transaction
+    with transaction.atomic():
+        try:
+            from members.models import MemberProfile
+            last = (
+                MemberProfile.objects
+                .select_for_update()
+                .filter(membership_number__regex=r'^BHC-\d+$')
+                .order_by('-membership_number')
+                .values_list('membership_number', flat=True)
+                .first()
+            )
+            next_num = int(last.split('-')[1]) + 1 if last else 1
+        except Exception:
+            next_num = 1
+
+        # Keep incrementing until we find a number not already taken
+        from members.models import MemberProfile as MP
+        candidate = f"BHC-{str(next_num).zfill(4)}"
+        while MP.objects.filter(membership_number=candidate).exists():
+            next_num += 1
+            candidate = f"BHC-{str(next_num).zfill(4)}"
+
+        return candidate
 
 
 class MemberProfile(models.Model):
