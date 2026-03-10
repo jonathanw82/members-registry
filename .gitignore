@@ -19,6 +19,8 @@ frontend/.env
 # Environment variables
 .env
 *.env
+backend/.env
+frontend/.env
 
 # OS files
 .DS_Store

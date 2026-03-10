@@ -4,7 +4,7 @@
 // Change API_BASE if your Django server runs on a different host/port.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const API_BASE = "http://localhost:8000/api";
+export const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000/api";
 
 // Simple event bus — fires when a 401 is received so AuthContext can log out
 export const authEvents = {
