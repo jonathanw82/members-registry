@@ -1,0 +1,116 @@
+/* src/styles/public.css */
+/* ─────────────────────────────────────────────────────────────────────────────
+   Public-facing pages: hero banner and hop variety cards
+───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Hero Banner ─────────────────────────────────────────────────────────── */
+
+.hero {
+  background: var(--forest);
+  margin: -2.5rem -2rem 2.5rem;
+  padding: 4rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle diagonal texture overlay */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 40px,
+    rgba(201, 168, 76, 0.03) 40px,
+    rgba(201, 168, 76, 0.03) 80px
+  );
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  color: var(--gold);
+  position: relative;
+}
+
+.hero p {
+  color: #a8c8a8;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+}
+
+.hero-btns {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+/* ── Hop Variety Cards ───────────────────────────────────────────────────── */
+
+.hop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.hop-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hop-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px var(--shadow);
+}
+
+.hop-card-top {
+  background: var(--forest);
+  padding: 1.25rem 1.5rem;
+}
+
+.hop-card-top h3 {
+  font-family: var(--font-display);
+  color: var(--gold);
+  font-size: 1.2rem;
+}
+
+.hop-card-top p {
+  color: #a8c8a8;
+  font-size: 0.78rem;
+  margin-top: 0.3rem;
+}
+
+.hop-card-body { padding: 1.25rem 1.5rem; }
+
+/* ── Yield Progress Bar ──────────────────────────────────────────────────── */
+
+.yield-bar-wrap  { margin-top: 0.75rem; }
+
+.yield-bar-track {
+  height: 6px;
+  background: var(--parchment);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.3rem;
+}
+
+.yield-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--moss), var(--gold));
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
