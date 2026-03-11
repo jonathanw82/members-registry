@@ -3,11 +3,13 @@
 // Full detail modal for a single member — tabs for details, varieties, yields.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef} from "react";
 import api from "../../api/client";
 import { useForm } from "../../hooks/useForm";
-import { Alert, Loading, Empty, Modal, Spinner } from "../ui";
+import { Alert, Loading, Empty, Modal, Spinner, ConfirmModal } from "../ui";
 import AdminAddYieldModal from "./AdminAddYieldModal";
+import { Chart as ChartJS, registerables } from "chart.js";
+ChartJS.register(...registerables);
 
 const HOP_VARIETIES = [
   { name: "Bramling +",  description: "Enhanced Bramling variety with intensified fruit and spice character." },
@@ -23,6 +25,207 @@ const HOP_VARIETIES = [
   { name: "Unkown",     description: "Unidentified variety" },
 ];
 
+function MemberYieldChart({ member }) {
+  const canvasRef = useRef(null);
+  const chartRef  = useRef(null);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
+
+    const varieties = member.hop_varieties || [];
+    const yields    = member.yield_records  || [];
+
+    if (!varieties.length || !yields.length) return;
+
+    // Collect all unique years from yield records
+    const years = [...new Set(yields.map(y => y.harvest_date?.slice(0, 4)))].sort();
+
+    // Build a dataset per variety
+    const style  = getComputedStyle(document.documentElement);
+    const forest = style.getPropertyValue("--forest").trim() || "#8b0000";
+    const gold   = style.getPropertyValue("--gold").trim()   || "#c9a84c";
+    const fog    = style.getPropertyValue("--fog").trim()    || "#8a8878";
+    const border = style.getPropertyValue("--border").trim() || "#c8c0ae";
+
+    // Colour palette cycling through forest/gold shades
+    const palette = [
+      `${forest}dd`, `${gold}dd`, "#c0392bdd", "#d4760add",
+      "#8b4513dd", "#6b8e23dd", "#4682b4dd", "#9370dbdd",
+    ];
+
+    const datasets = varieties.map((v, i) => {
+      const data = years.map(year => {
+        const total = yields
+          .filter(y => y.hop_variety === v.id && y.harvest_date?.startsWith(year))
+          .reduce((sum, y) => sum + parseFloat(y.quantity_kg || 0), 0);
+        return parseFloat(total.toFixed(5));
+      });
+      return {
+        label:           v.name,
+        data,
+        backgroundColor: palette[i % palette.length],
+        borderColor:     palette[i % palette.length].replace("dd", ""),
+        borderWidth:     1.5,
+        borderRadius:    4,
+      };
+    });
+
+    // Only render if there's actual data
+    const hasData = datasets.some(d => d.data.some(v => v > 0));
+    if (!hasData) return;
+
+    chartRef.current = new ChartJS(canvasRef.current, {
+      type: "bar",
+      data: { labels: years, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: true,
+            position: "bottom",
+            labels: {
+              font:      { family: "'DM Mono', monospace", size: 10 },
+              color:     fog,
+              boxWidth:  12,
+              padding:   12,
+            },
+          },
+          tooltip: {
+            backgroundColor: "#1a1a14",
+            titleColor:      gold,
+            bodyColor:       "#e8e4dc",
+            padding:         10,
+            cornerRadius:    6,
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} kg`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid:   { display: false },
+            ticks:  { color: fog, font: { family: "'DM Mono', monospace", size: 10 } },
+            border: { color: border },
+          },
+          y: {
+            beginAtZero: true,
+            grid:   { color: `${border}66` },
+            ticks:  {
+              color: fog,
+              font:  { family: "'DM Mono', monospace", size: 10 },
+              callback: val => `${val}kg`,
+            },
+            border: { color: border },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
+    };
+  }, [member]);
+
+  const varieties = member.hop_varieties || [];
+  const yields    = member.yield_records  || [];
+  const hasData   = varieties.length > 0 && yields.length > 0;
+
+  if (!hasData) return null;
+
+   const totals = varieties.map(v => ({
+    name:  v.name,
+    total: yields
+      .filter(y => y.hop_variety === v.id)
+      .reduce((sum, y) => sum + parseFloat(y.quantity_kg || 0), 0),
+  })).sort((a, b) => b.total - a.total);
+
+  return (
+    <div style={{
+      background: "var(--parchment)",
+      borderRadius: "8px",
+      padding: "1rem",
+      marginBottom: "1rem",
+    }}>
+      {/* Chart */}
+      <div style={{
+        fontSize: "0.67rem",
+        letterSpacing: "0.12em",
+        textTransform: "uppercase",
+        color: "var(--fog)",
+        marginBottom: "0.75rem",
+      }}>
+        Yield by variety per year (kg)
+      </div>
+      <canvas ref={canvasRef} style={{ maxHeight: 220 }} />
+
+      {/* Totals */}
+      <div style={{
+        marginTop: "1rem",
+        paddingTop: "0.85rem",
+        borderTop: "1px solid var(--border)",
+      }}>
+        <div style={{
+          fontSize: "0.67rem",
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "var(--fog)",
+          marginBottom: "0.6rem",
+        }}>
+          All-time totals
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          {totals.map(v => (
+            <div key={v.name} style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              fontSize: "0.8rem",
+            }}>
+              <span style={{ color: "var(--dark)", fontWeight: 500 }}>{v.name}</span>
+              <span style={{
+                background: "white",
+                border: "1px solid var(--border)",
+                borderRadius: "3px",
+                padding: "0.15rem 0.5rem",
+                fontSize: "0.75rem",
+                fontFamily: "var(--font-mono)",
+                color: "var(--forest)",
+                fontWeight: 500,
+              }}>
+                {v.total % 1 === 0 ? v.total.toFixed(2) : v.total.toFixed(5).replace(/\.?0+$/, "")} kg
+              </span>
+            </div>
+          ))}
+          {/* Grand total */}
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            fontSize: "0.8rem",
+            borderTop: "1px solid var(--border)",
+            paddingTop: "0.4rem",
+            marginTop: "0.2rem",
+          }}>
+            <span style={{ color: "var(--fog)", fontSize: "0.72rem", letterSpacing: "0.08em", textTransform: "uppercase" }}>Total</span>
+            <span style={{
+              background: "var(--forest)",
+              color: "var(--gold)",
+              borderRadius: "3px",
+              padding: "0.15rem 0.5rem",
+              fontSize: "0.75rem",
+              fontWeight: 500,
+            }}>
+              {totals.reduce((s, v) => s + v.total, 0).toFixed(5).replace(/\.?0+$/, "")} kg
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminMemberModal({ memberId, onClose }) {
   const [member, setMember]     = useState(null);
   const [loading, setLoading]   = useState(true);
@@ -35,6 +238,7 @@ export default function AdminMemberModal({ memberId, onClose }) {
   const [addingVariety, setAddingVariety] = useState(false);
   const [varietyError, setVarietyError]   = useState("");
   const { values, setValues, field } = useForm({});
+  const [confirmModal, setConfirmModal] = useState(null);
 
   const load = useCallback(async () => {
     const data = await api.get(`/admin/members/${memberId}/`);
@@ -90,20 +294,36 @@ export default function AdminMemberModal({ memberId, onClose }) {
     }
   };
 
-  const deleteVariety = async (id) => {
-    if (!confirm("Remove this hop variety from the member? Any yield records for this variety will also be deleted.")) return;
-    try {
-      await api.delete(`/admin/varieties/${id}/`);
-      load();
-    } catch {
-      setMsg({ type: "error", text: "Failed to remove variety." });
-    }
+  const deleteVariety = (id, name) => {
+    setConfirmModal({
+      title:        "Remove Variety",
+      message:      `Remove "${name}" from this member? Any yield records for this variety will also be deleted.`,
+      confirmLabel: "Remove",
+      confirmStyle: "btn-danger",
+      onConfirm: async () => {
+      setConfirmModal(null);
+        try {
+          await api.delete(`/admin/varieties/${id}/`);
+          load();
+        } catch {
+          setMsg({ type: "error", text: "Failed to remove variety." });
+        }
+      },
+    });
   };
 
-  const deleteYield = async (id) => {
-    if (!confirm("Delete this yield record?")) return;
-    await api.delete(`/admin/yields/${id}/`);
-    load();
+  const deleteYield = (id) => {
+    setConfirmModal({
+      title:        "Delete Yield Record",
+      message:      "Are you sure you want to delete this yield record? This cannot be undone.",
+      confirmLabel: "Delete",
+      confirmStyle: "btn-danger",
+      onConfirm: async () => {
+        setConfirmModal(null);
+        await api.delete(`/admin/yields/${id}/`);
+        load();
+      },
+    });
   };
 
   return (
@@ -119,6 +339,7 @@ export default function AdminMemberModal({ memberId, onClose }) {
             <button className={`tab ${tab === "details"   ? "active" : ""}`} onClick={() => setTab("details")}   style={{ fontSize: "0.72rem", padding: "0.5rem 0.9rem" }}>Details</button>
             <button className={`tab ${tab === "varieties" ? "active" : ""}`} onClick={() => setTab("varieties")} style={{ fontSize: "0.72rem", padding: "0.5rem 0.9rem" }}>Varieties ({member.hop_varieties?.length || 0})</button>
             <button className={`tab ${tab === "yields"    ? "active" : ""}`} onClick={() => setTab("yields")}    style={{ fontSize: "0.72rem", padding: "0.5rem 0.9rem" }}>Yields ({member.yield_records?.length || 0})</button>
+            <button className={`tab ${tab === "stats"     ? "active" : ""}`} onClick={() => setTab("stats")}     style={{ fontSize: "0.72rem", padding: "0.5rem 0.9rem" }}>Stats</button>
           </div>
 
           {/* ── Details ── */}
@@ -206,7 +427,7 @@ export default function AdminMemberModal({ memberId, onClose }) {
                         <strong style={{ fontSize: "0.88rem" }}>{v.name}</strong>
                         <div style={{ fontSize: "0.75rem", color: "var(--fog)" }}>{v.description || "No description"}</div>
                       </div>
-                      <button className="btn btn-danger btn-sm" onClick={() => deleteVariety(v.id)}>Remove</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => deleteVariety(v.id, v.name)}>Remove</button>
                     </div>
                   ))}
                 </div>
@@ -249,6 +470,20 @@ export default function AdminMemberModal({ memberId, onClose }) {
                 />
               )}
             </>
+          )}
+          {/* ── Stats ── */}
+          {tab === "stats" && (
+            <MemberYieldChart member={member} />
+          )}
+          {confirmModal && (
+            <ConfirmModal
+              title={confirmModal.title}
+              message={confirmModal.message}
+              confirmLabel={confirmModal.confirmLabel}
+              confirmStyle={confirmModal.confirmStyle}
+              onConfirm={confirmModal.onConfirm}
+              onCancel={() => setConfirmModal(null)}
+            />
           )}
         </>
       )}

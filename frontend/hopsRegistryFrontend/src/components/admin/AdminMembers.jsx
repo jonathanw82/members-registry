@@ -6,9 +6,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import api from "../../api/client";
-import { Loading, Empty } from "../ui";
+import { Loading, Empty, ConfirmModal } from "../ui";
 import AdminMemberModal from "./AdminMemberModal";
 import AdminCreateMemberModal from "./AdminCreateMemberModal";
+
 
 export default function AdminMembers() {
   const [members, setMembers] = useState([]);
@@ -16,6 +17,7 @@ export default function AdminMembers() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -27,30 +29,38 @@ export default function AdminMembers() {
 
   useEffect(() => { load(); }, [load]);
 
-  const deleteMember = async (m) => {
-    if (m.is_active === false) {
-      // Reactivate
-      if (!confirm(`Reactivate "${m.full_name}"? They will be able to log in again.`)) return;
-      await api.patch(`/admin/members/${m.id}/`, { is_active: true });
-    } else {
-      // Deactivate
-      if (!confirm(`Deactivate "${m.full_name}"? They will no longer be able to log in but all their yield history will be preserved.`)) return;
-      await api.delete(`/admin/members/${m.id}/`);
-    }
-    await load();
+  const deleteMember = (m) => {
+  setConfirmModal({
+    title:        m.is_active === false ? "Reactivate Member" : "Deactivate Member",
+    message:      m.is_active === false
+      ? `Reactivate "${m.full_name}"? They will be able to log in again.`
+      : `Deactivate "${m.full_name}"? They will no longer be able to log in but all their yield history will be preserved.`,
+    confirmLabel: m.is_active === false ? "Reactivate" : "Deactivate",
+    confirmStyle: m.is_active === false ? "btn-primary" : "btn-danger",
+    onConfirm: async () => {
+      setConfirmModal(null);
+        if (m.is_active === false) {
+          await api.patch(`/admin/members/${m.id}/`, { is_active: true });
+        } else {
+          await api.delete(`/admin/members/${m.id}/`);
+        }
+        await load();
+      },
+    });
   };
 
-  const anonymiseMember = async (m) => {
-    if (!confirm(
-      `Anonymise "${m.full_name}"?\n\n` +
-      `This will:\n` +
-      `• Remove their name, email and telephone\n` +
-      `• Deactivate their account\n` +
-      `• Preserve all yield history under their membership number\n\n` +
-      `This cannot be undone.`
-    )) return;
-    await api.post(`/admin/members/${m.id}/anonymise/`, {});
-    await load();
+  const anonymiseMember = (m) => {
+  setConfirmModal({
+      title:        "Anonymise Member",
+      message:      `This will remove all personal details for "${m.full_name}" including their name, email and telephone. Their yield history will be preserved under their membership number. This cannot be undone.`,
+      confirmLabel: "Anonymise",
+      confirmStyle: "btn-danger",
+      onConfirm: async () => {
+        setConfirmModal(null);
+        await api.post(`/admin/members/${m.id}/anonymise/`, {});
+        await load();
+      },
+    });
   };
 
   return (
@@ -130,6 +140,16 @@ export default function AdminMembers() {
 
       {selected   && <AdminMemberModal memberId={selected.id} onClose={() => { setSelected(null); load(); }} />}
       {showCreate && <AdminCreateMemberModal onClose={() => { setShowCreate(false); load(); }} />}
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmLabel={confirmModal.confirmLabel}
+          confirmStyle={confirmModal.confirmStyle}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(null)}
+        />
+      )}
     </>
   );
 }

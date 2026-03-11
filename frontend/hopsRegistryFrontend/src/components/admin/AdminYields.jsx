@@ -1,11 +1,7 @@
-// src/components/admin/AdminYields.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Select a member, view all their yield records, add or delete entries.
-// ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
 import api from "../../api/client";
-import { Loading, Empty } from "../ui";
+import { Loading, Empty, ConfirmModal } from "../ui";
 import AdminAddYieldModal from "./AdminAddYieldModal";
 
 function formatKg(value) {
@@ -23,6 +19,7 @@ export default function AdminYields() {
   const [varieties, setVarieties]         = useState([]);
   const [yieldLoading, setYieldLoading]   = useState(false);
   const [showAdd, setShowAdd]             = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
 
   // Load member list on mount
   useEffect(() => {
@@ -34,7 +31,7 @@ export default function AdminYields() {
 
   // Load yields + varieties when a member is selected
   useEffect(() => {
-    if (!selectedMember) { setYields([]); setVarieties([]); return; }
+    if (!selectedMember) return;
     setYieldLoading(true);
     Promise.all([
       api.get(`/admin/members/${selectedMember}/yields/`),
@@ -51,10 +48,17 @@ export default function AdminYields() {
     if (data) setYields(data);
   };
 
-  const deleteYield = async (id) => {
-    if (!confirm("Delete this yield?")) return;
-    await api.delete(`/admin/yields/${id}/`);
-    refreshYields();
+  const deleteYield = (id) => {
+    setConfirmModal({
+      title:        "Delete Yield Record",
+      message:      "Are you sure you want to delete this yield record? This cannot be undone.",
+      confirmLabel: "Delete",
+      onConfirm: async () => {
+        setConfirmModal(null);
+        await api.delete(`/admin/yields/${id}/`);
+        load();
+      },
+    });
   };
 
   return (
@@ -131,6 +135,16 @@ export default function AdminYields() {
           onClose={() => { setShowAdd(false); refreshYields(); }}
         />
       )}
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmLabel={confirmModal.confirmLabel || "Confirm"}
+          confirmStyle={confirmModal.confirmStyle || "btn-danger"}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(null)}
+        />
+        )}
     </>
   );
 }

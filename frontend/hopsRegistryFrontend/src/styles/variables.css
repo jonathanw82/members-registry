@@ -1,10 +1,15 @@
 /* src/styles/variables.css */
 /* ─────────────────────────────────────────────────────────────────────────────
-   Design tokens — change colours, fonts, and spacing here.
-   All other CSS files reference these variables.
+   Design tokens + reset + base layout
+   Mobile-first: base styles are for mobile, scale up with min-width queries
 ───────────────────────────────────────────────────────────────────────────── */
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap');
+
+@font-face {
+  font-family: messengerTexture;
+  src: url(../assets/fonts/MessengerTexture.otf) format('opentype');
+}
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -13,30 +18,36 @@
 }
 
 :root {
-  /* Palette */
   --cream:     #f5f0e8;
   --parchment: #ede8dc;
   --dark:      #1a1a14;
-  --forest:    #2d4a2d;
-  --moss:      #4a7c4a;
-  --gold:      #c9a84c;
+  --forest:    #515F2A;
+  --moss:      #999836;
+  /* --forest:    #2d4a2d;
+  --moss:      #4a7c4a; */
+  --gold:      #FFCF01;
+  /* --gold:      #c9a84c; */
   --amber:     #d4760a;
-  --rust:      #8b3a1a;
+  --rust:      #6b0000;
   --fog:       #8a8878;
   --border:    #c8c0ae;
   --shadow:    rgba(26, 26, 20, 0.12);
 
-  /* Typography */
-  --font-display: 'Playfair Display', serif;
+  --font-display: messengerTexture, 'Playfair Display', serif;
   --font-mono:    'DM Mono', monospace;
 }
+
+html { font-size: 15px; }
 
 body {
   background: var(--cream);
   color: var(--dark);
   font-family: var(--font-mono);
   min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
 }
+
+#root { width: 100%; }
 
 .app {
   min-height: 100vh;
@@ -46,111 +57,18 @@ body {
 
 main {
   flex: 1;
-  padding: 2.5rem 2rem;
+  padding: 1.25rem 1rem;
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  width: 100%;
 }
 
-#root {
-  width: 100%;
+/* ── Tablet ── */
+@media (min-width: 640px) {
+  main { padding: 1.75rem 1.5rem; }
 }
 
-/* ── Responsive ────────────────────────────────────────────────────────────── */
-
-@media (max-width: 768px) {
-
-  /* Nav — stack vertically or shrink */
-  nav {
-    padding: 0 1rem;
-    height: auto;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-  }
-
-  .nav-links {
-    flex-wrap: wrap;
-    gap: 0.15rem;
-  }
-
-  .nav-btn {
-    font-size: 0.7rem;
-    padding: 0.4rem 0.6rem;
-  }
-
-  .nav-divider { display: none; }
-
-  /* Main content padding */
-  main { padding: 1.5rem 1rem; }
-
-  /* Hero */
-  .hero {
-    margin: -1.5rem -1rem 1.5rem;
-    padding: 2.5rem 1rem;
-  }
-
-  /* Page header */
-  .page-header h1 { font-size: 1.6rem; }
-
-  /* Cards */
-  .card { padding: 1.25rem; }
-
-  /* Tables — horizontal scroll with visible indicator */
-  .table-wrap {
-    border-radius: 6px;
-  }
-
-  table { font-size: 0.78rem; }
-  th, td { padding: 0.6rem 0.75rem; }
-
-  /* Hide less important columns on mobile */
-  table th:nth-child(4),
-  table td:nth-child(4),
-  table th:nth-child(5),
-  table td:nth-child(5) {
-    display: none;
-  }
-
-  /* Modal — full screen on mobile */
-  .modal-backdrop { padding: 0; align-items: flex-end; }
-
-  .modal {
-    max-width: 100%;
-    border-radius: 12px 12px 0 0;
-    max-height: 92vh;
-  }
-
-  /* Tabs — scrollable */
-  .tabs { overflow-x: auto; }
-  .tab  { white-space: nowrap; font-size: 0.72rem; padding: 0.5rem 0.85rem; }
-
-  /* Stats strip — 2 columns on mobile */
-  .stats-strip { grid-template-columns: 1fr 1fr; }
-
-  /* Buttons */
-  .btn-group { flex-direction: column; }
-  .btn-group .btn { width: 100%; justify-content: center; }
-
-  /* Search bar */
-  .search-bar { flex-direction: column; align-items: stretch; }
-  .search-bar input { max-width: 100%; }
-  .search-bar .btn { width: 100%; justify-content: center; }
-}
-
-@media (max-width: 480px) {
-
-  .nav-brand { font-size: 1.1rem; }
-
-  .page-header h1 { font-size: 1.3rem; }
-
-  /* Stats strip — single column on very small screens */
-  .stats-strip { grid-template-columns: 1fr 1fr; }
-  .stat-box .num { font-size: 1.5rem; }
-
-  /* Hop cards — single column */
-  .hop-grid { grid-template-columns: 1fr; }
-
-  /* Card grid — single column */
-  .card-grid { grid-template-columns: 1fr; }
+/* ── Desktop ── */
+@media (min-width: 1024px) {
+  main { padding: 2.5rem 2rem; }
 }

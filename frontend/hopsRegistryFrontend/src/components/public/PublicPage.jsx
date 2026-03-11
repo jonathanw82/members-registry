@@ -154,7 +154,7 @@ export default function PublicPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div>
+    <div className="hero_box">
       {/* Hero */}
       <div className="hero">
         <h1>British Hop Harvest Registry</h1>

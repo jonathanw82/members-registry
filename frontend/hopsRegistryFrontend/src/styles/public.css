@@ -1,20 +1,24 @@
 /* src/styles/public.css */
 /* ─────────────────────────────────────────────────────────────────────────────
-   Public-facing pages: hero banner and hop variety cards
+   Public landing page — mobile-first
 ───────────────────────────────────────────────────────────────────────────── */
 
-/* ── Hero Banner ─────────────────────────────────────────────────────────── */
+/* ── Hero ────────────────────────────────────────────────────────────────── */
+
+.hero_box{
+  margin-top: 0.3px;
+}
+
 
 .hero {
   background: var(--forest);
-  margin: -2.5rem -2rem 2.5rem;
-  padding: 4rem 2rem;
+  margin: -1.25rem -1rem 1.5rem;
+  padding: 2.5rem 1.25rem;
   text-align: center;
   position: relative;
   overflow: hidden;
 }
 
-/* Subtle diagonal texture overlay */
 .hero::before {
   content: '';
   position: absolute;
@@ -30,37 +34,67 @@
 
 .hero h1 {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-size: clamp(1.6rem, 6vw, 3.5rem);
   font-weight: 900;
   color: var(--gold);
   position: relative;
+  line-height: 1.1;
 }
 
 .hero p {
-  color: #a8c8a8;
-  font-size: 0.9rem;
-  margin-top: 1rem;
-  max-width: 500px;
+  color: #c8d8c8;
+  font-size: 0.82rem;
+  margin-top: 0.85rem;
+  max-width: 480px;
   margin-left: auto;
   margin-right: auto;
   position: relative;
+  line-height: 1.6;
 }
 
 .hero-btns {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
   position: relative;
 }
 
-/* ── Hop Variety Cards ───────────────────────────────────────────────────── */
+.hero-btns .btn { max-width: 260px; width: 100%; }
+
+@media (min-width: 480px) {
+  .hero-btns              { flex-direction: row; justify-content: center; }
+  .hero-btns .btn         { width: auto; max-width: none; }
+}
+
+@media (min-width: 640px) {
+  .hero { margin: -1.75rem -1.5rem 2rem; padding: 3rem 2rem; }
+  .hero p { font-size: 0.88rem; }
+}
+
+@media (min-width: 1024px) {
+  .hero { margin: -2.5rem -2rem 2.5rem; padding: 4rem 2rem; }
+}
+
+/* ── Hop Cards ───────────────────────────────────────────────────────────── */
 
 .hop-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 480px) {
+  .hop-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 768px) {
+  .hop-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; }
+}
+
+@media (min-width: 1024px) {
+  .hop-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
 }
 
 .hop-card {
@@ -72,36 +106,30 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.hop-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px var(--shadow);
+@media (hover: hover) {
+  .hop-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px var(--shadow);
+  }
 }
 
-.hop-card-top {
-  background: var(--forest);
-  padding: 1.25rem 1.5rem;
-}
+.hop-card-top { background: var(--forest); padding: 1rem 1.25rem; }
 
 .hop-card-top h3 {
   font-family: var(--font-display);
   color: var(--gold);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
-.hop-card-top p {
-  color: #a8c8a8;
-  font-size: 0.78rem;
-  margin-top: 0.3rem;
-}
+.hop-card-top p { color: #c8d8c8; font-size: 0.75rem; margin-top: 0.25rem; }
+.hop-card-body  { padding: 1rem 1.25rem; }
 
-.hop-card-body { padding: 1.25rem 1.5rem; }
+/* ── Yield Bar ───────────────────────────────────────────────────────────── */
 
-/* ── Yield Progress Bar ──────────────────────────────────────────────────── */
-
-.yield-bar-wrap  { margin-top: 0.75rem; }
+.yield-bar-wrap  { margin-top: 0.65rem; }
 
 .yield-bar-track {
-  height: 6px;
+  height: 5px;
   background: var(--parchment);
   border-radius: 3px;
   overflow: hidden;

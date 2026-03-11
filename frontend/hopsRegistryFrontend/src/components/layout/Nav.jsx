@@ -5,6 +5,7 @@
 
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "../../context/RouterContext";
+// import logo from "../../assets/images/logo_mono-strip.png";
 
 export default function Nav() {
   const { user, logout } = useAuth();
@@ -14,6 +15,7 @@ export default function Nav() {
     <nav>
       <div className="nav-brand" onClick={() => navigate("public")}>
         <span>🌿</span> BRISTOL HOPS COLLECTIVE
+        {/* <img className="nav-logo" src={logo} alt="BHC-logo" /> */}
       </div>
 
       <div className="nav-links">
